@@ -30,6 +30,7 @@ but also a tool for learning for all future developers!
     - [CSS Guidelines](#css-guidelines)
         - [Mobile First!](#css-mobile-first)
         - [Structure](#css-structure)
+        - [Sass Structure](#css-sass-structure)
         - [CSS Properties List](#css-properties-list)
 - [Markdown](#Markdown)
 - [Contributing!](#Contributors)
@@ -607,54 +608,48 @@ Default styling must be mobile/small-sized first.
 ```
 
 #### <a name="css-structure"></a> Structure
-Separate structural properties from visual properties using scoped mixins. This will allow us to easily swap visual appearance of elements without needing to override css definitions, and helps us think about skinning properties vs layout properties. This format also serves as a self-documenting table of contents.
+Separate structural properties from visual properties using includes. This will allow us to think about how to easily swap visual appearance of elements without needing to override css definitions. It helps us think about skinning properties vs layout properties. This format also serves as a self-documenting table of contents.
 
-For this to work, define a mixin within a class definition. Immediately after, include the mixin.
-
-This may seem redundant, however, it helps us think about skinning properties vs layout properties.
+For this to work, create mixins that act as a shell, then simply include them in your CSS rules.
 
 ```sass
-// Color Vars
+// Example's bootstrap variables/mixins.
 $robot-black: #121212;
 $robot-gold: gold;
 $robot-titanium: #ddd;
+@mixin structure { @content; }
+@mixin visual { @content; }
 
 // Blocks
 .robot {
-    @mixin structure {
+    @include structure {
         display: block;
         height: 60px;
         width: 100px;
     }
 
-    @mixin visual {
+    @include visual {
         background-color: $robot-titanium;
         border: 1px solid $robot-gold;
         box-shadow: 2px 2px 2px rgba(255,0,0,.6);
         transform: translateZ(1000px);
     }
-
-    @include structure;
-    @include visual;
 }
 
 // Elements
 .robot__head {
-    @mixin structure {
+    @include structure {
         display: block;
     }
 
-    @mixin visual {
+    @include visual {
         background-color: $robot-black;
         border-radius: 1000px;
     }
-
-    @include structure;
-    @include visual;
 }
 
 .robot__claw {
-    @mixin structure {
+    @include structure {
         display: block;
 
         &:before {
@@ -662,23 +657,56 @@ $robot-titanium: #ddd;
         }
     }
 
-    @mixin visual {
+    @include visual {
         background-color: $robot-black;
         border-radius: 1000px;
         box-shadow: 10px 10px 10px gold;
     }
-
-    @include structure;
-    @include visual;
 }
 
 // Modifiers
 .robot--space-robot {
-    @mixin visual {
+    @include visual {
         background: url(/images/spacegraphic.png) repeat top left;
     }
+}
+```
 
-    @include visual;
+
+#### <a name="css-sass-structure"></a> Sass Structure
+When defining your classes, avoid deep nesting of elements. It is preferred to start a new line with what you're building.
+
+Because we're writing scoped mixins for each class, this will reduce the amount of noise in each class definition.
+
+```scss
+// Bad
+.robot {
+    &--space-robot {
+
+    }
+}
+
+// Good
+.robot {
+
+}
+
+.robot--space-robot {
+
+}
+```
+
+```scss
+// Bad
+.robot:hover {
+
+}
+
+// Good
+.robot {
+    &:hover {
+
+    }
 }
 ```
 
