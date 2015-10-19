@@ -3,7 +3,6 @@ Version 1.3.0
 
 ![I honestly didn't think you could even USE emoji in variable names. Or that there were so many different crying ones.](http://imgs.xkcd.com/comics/code_quality.png)
 
-<<<<<<< HEAD
 ## About these guidelines
 
 The central goal of this document is to create readable, consistent code across
@@ -31,6 +30,7 @@ but also a tool for learning for all future developers!
     - [CSS Guidelines](#css-guidelines)
         - [Mobile First!](#css-mobile-first)
         - [Structure](#css-structure)
+        - [Selector Depth](#css-selector-depth)
         - [CSS Properties List](#css-properties-list)
 - [Markdown](#Markdown)
 - [Contributing!](#Contributors)
@@ -556,7 +556,7 @@ Use ID's sparingly! Make sure there is only one per document! And never style th
 ## <a name="css"></a> CSS/SASS
 0. The CSS/Sass guidelines are based off of [csswizardry/CSS-Guidelines](https://github.com/csswizardry/CSS-Guidelines).
 0. We use [normalize.css](http://necolas.github.io/normalize.css/) as our style reset.
-0. <a name="BEM"></a> We favor BEM (Block Element Modifier) syntax where possible, and the wonderfully flat selector structure this gives us.
+0. We favor BEM (Block Element Modifier) syntax where possible, and the wonderfully flat selector structure this gives us.
 
 ### <a name="css-bem"> BEM
     ```css
@@ -608,11 +608,13 @@ Default styling must be mobile/small-sized first.
 ```
 
 #### <a name="css-structure"></a> Structure
-Separate structural properties from visual properties using scoped mixins. This will allow us to easily swap visual appearance of elements without needing to override css definitions, and helps us think about skinning properties vs layout properties. This format also serves as a self-documenting table of contents.
+Separate structural properties from visual properties using scoped @includes. This will
+allow us to easily swap visual appearance of elements without needing to override css
+definitions, and helps us think about skinning properties vs layout properties. In the
+example below, we've also added global flags to toggle structure + visual styles (helps
+with a sanity check on the entire scss codebase).
 
-For this to work, define a mixin within a class definition. Immediately after, include the mixin.
-
-This may seem redundant, however, it helps us think about skinning properties vs layout properties.
+For this to work, define global @mixins for visual and structure styles, then use @includes in each scoped block of SCSS.
 
 ```sass
 // Color Vars
@@ -620,42 +622,53 @@ $robot-black: #121212;
 $robot-gold: gold;
 $robot-titanium: #ddd;
 
+// Global Mixins for structure and visual styles
+
+$structure-enabled: true !default;
+$visual-enabled:    true !default;
+
+@mixin structure {
+    @if ($structure-enabled) {
+        @content;
+    }
+}
+
+@mixin visual {
+    @if ($visual-enabled) {
+        @content;
+    }
+}
+
 // Blocks
 .robot {
-    @mixin structure {
+    @include structure {
         display: block;
         height: 60px;
         width: 100px;
     }
 
-    @mixin visual {
+    @include visual {
         background-color: $robot-titanium;
         border: 1px solid $robot-gold;
         box-shadow: 2px 2px 2px rgba(255,0,0,.6);
         transform: translateZ(1000px);
     }
-
-    @include structure;
-    @include visual;
 }
 
 // Elements
 .robot__head {
-    @mixin structure {
+    @include structure {
         display: block;
     }
 
-    @mixin visual {
+    @include visual {
         background-color: $robot-black;
         border-radius: 1000px;
     }
-
-    @include structure;
-    @include visual;
 }
 
 .robot__claw {
-    @mixin structure {
+    @include structure {
         display: block;
 
         &:before {
@@ -663,26 +676,73 @@ $robot-titanium: #ddd;
         }
     }
 
-    @mixin visual {
+    @include visual {
         background-color: $robot-black;
         border-radius: 1000px;
         box-shadow: 10px 10px 10px gold;
     }
-
-    @include structure;
-    @include visual;
 }
 
 // Modifiers
 .robot--space-robot {
-    @mixin visual {
+    @include visual {
         background: url(/images/spacegraphic.png) repeat top left;
     }
-
-    @include visual;
 }
 ```
+#### <a name="css-selector-depth"></a> CSS Selector Depth
 
+In a given stylesheet, nesting of selectors should at most, be 2 levels and only in the **block -> block__element direction**.  
+
+Given exceptions include styling via eq.js attributes, or media queries... but the depth is only allowed at 2 levels!
+
+```sass
+
+$robot-black: #121212;
+$space-black: #000000;
+
+.robot {
+    @include structure {
+        display: block;
+        height: 60px;
+        width: 100px;
+    }
+}
+
+.robot__head {
+    @include structure {
+        display: block;
+    }
+
+    @include visual {
+        background-color: $robot-black;
+        border-radius: 1000px;
+    }
+}
+
+// HERE WE GO 2 LEVELS, BUT DOWNWARDS!
+
+.robot--space-robot {
+    .robot__head {
+        @include visual {
+            background-color: $space-black;
+        }
+    }
+}
+
+// AND IN THIS EXAMPLE WE DEFER TO AN EQ-JS-STYLE DATA ATTRIBUTE,
+// BUT STILL ONLY 2 LEVELS!
+
+[data-eq-state$="super-nova-big"] {
+    .robot__head {
+        @include structure {
+            width: 10000000px;
+            height: 10000000px;
+        }
+    }
+}
+
+```
 
 #### <a name="css-properties-list"></a> CSS Properties List
 Here's a list of structural properties vs visual properties:
@@ -693,9 +753,10 @@ Here's a list of structural properties vs visual properties:
 | height     | box-shadow |
 | margin     | border     |
 | padding    | color      |
-| position   | transform  |
-| width      | transition |
-| z-index    | opacity    |
+| position   | font       |
+| width      | transform  |
+| z-index    | transition |
+|            | opacity    |
 |            | visibility |
 
 Depending on the application, here is a list of properties that
