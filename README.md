@@ -714,16 +714,17 @@ Because we're writing scoped mixins for each class, this will reduce the amount 
 #### <a name="css-properties-list"></a> CSS Properties List
 Here's a list of structural properties vs visual properties:
 
-| Structural | Visual     |
-| ---------- | ---------- |
-| display    | background |
-| height     | box-shadow |
-| margin     | border     |
-| padding    | color      |
-| position   | transform  |
-| width      | transition |
-| z-index    | opacity    |
-|            | visibility |
+| Structural     | Visual       |
+| -------------- | ------------ |
+| display        | background   |
+| height         | box-shadow   |
+| margin         | border       |
+| padding        | color        |
+| position       | column-count |
+| vertical-align | transform    |
+| width          | transition   |
+| z-index        | opacity      |
+|                | visibility   |
 
 Depending on the application, here is a list of properties that
 could be used to define a theme:
